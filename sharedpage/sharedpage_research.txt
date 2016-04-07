@@ -1,0 +1,52 @@
+This is my own research note on shared memory page, which is slightly different from http://3dbrew.org/wiki/Configuration_Memory#Shared_Memory_Page_For_ARM11_Processes
+
+I do all test only on Old 3DS
+
+Virtual Address | Type  | Value and description
+0x1FF81000       u32     DateTimeUpdateCount
+                         Increase by one each Time the date time gets updated (once per hour)
+                         The first update seems set this to 1.
+
+     +0x04       u8      =1  RunningHw (from 3dbrew)
+     +0x05       u8      =0  McuHwInfo (from 3dbrew)
+     +0x06       u8      =1
+     +0x07       u8      =0xE6
+     +0x08       0x18 byte all zero?
+
+     +0x20       u64     MillisecondsSinceFirstJan1900
+     +0x28       u64     SystemTickLastTimeThisWasUpdated
+     +0x30       u64     TickToSecondCoefficient 
+                         Similar to SystemTickRate=268MHz
+                         The first update seems write this with fixed value 0x0FFB0FF0
+                         and following update write this with a calculated value
+                         based on tick rate in the last hour.
+     +0x38       s64     TickCalibrateOffset?
+                         The first update seems write this with fixed value 0
+
+     +0x40       0x20 byte same structure as 0x20~0x40
+*Two date time region (0x20~0x40 and 0x40~0x60) are update alternately.
+ If DateTimeUpdateCount is even, the the first one is the most updated; otherwise the second one is.
+
+     +0x60       6 byte  WifiMacAddr
+     +0x66       u8      =0~3  WifiLinkLevel
+     +0x67       u8      WifiState?
+                         0=Enabled
+                         1=TryConnecting
+                         2=Connected
+                         5=ConnectFailed
+                         7=Disabled
+     +0x68       0x18 byte all zero?
+
+     +0x80       float32 3DSliderState
+     +0x84       u8      =0  LedState (from 3dbrew)
+     +0x85       u8      BatteryState
+                         0x14=no charging?
+                         0x15=connected no charging?
+                         0x17=charging?
+     +0x86       u8      =1
+     +0x87       u8      =0
+     +0x88       0x18 byte all zero?
+     +0xA0       u64     MenuId
+     +0xA8       u64     MenuId
+     +0xB0       0x10 byte all zero?
+     +0xC0       u8      headphnoeConnected
