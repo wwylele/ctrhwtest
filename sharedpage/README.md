@@ -1,0 +1,1 @@
+Read and print out shared memory page (0x1FF81000).

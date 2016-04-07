@@ -1,0 +1,1 @@
+This repo contains some hardware test on 3DS. Compile using ctrulib.

@@ -1,0 +1,1 @@
+A test read and print out data from accelerometer and gyroscope, also testing behaviour of some service functions.
