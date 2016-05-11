@@ -40,9 +40,9 @@ Virtual Address | Type  | Value and description
      +0x80       float32 3DSliderState
      +0x84       u8      =0  LedState (from 3dbrew)
      +0x85       u8      BatteryState
-                         0x14=no charging?
-                         0x15=connected no charging?
-                         0x17=charging?
+                  bit0 AdapterState
+                  bit1 BatteryChargeState
+                  bit2~4 BatteryLevel
      +0x86       u8      =1
      +0x87       u8      =0
      +0x88       0x18 byte all zero?
