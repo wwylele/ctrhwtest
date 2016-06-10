@@ -1,6 +1,8 @@
 #include <3ds.h>
 #include <stdio.h>
 
+const s64 ONE_SEC = 1000*1000*1000;
+const Result TIMEOUT = 0x09401BFE;
 
 void Pause() {
     while (aptMainLoop()) {
@@ -25,24 +27,35 @@ int main(int argc, char **argv) {
 
     consoleInit(GFX_TOP, NULL);
 
+    Result result;
+
     Handle sema;
-    svcCreateSemaphore(&sema, 10, 10);
+    svcCreateSemaphore(&sema, 7, 7);
     printf("available_count=%ld\n", GetSemaCount(sema));
 
     puts("acquire via WaitSynch1");
-    svcWaitSynchronization(sema, U64_MAX);
+    result = svcWaitSynchronization(sema, ONE_SEC);
+    if (result == TIMEOUT) puts("Timeout!");
     printf("available_count=%ld\n", GetSemaCount(sema));
 
     Handle semas[] = {sema, sema, sema};
     s32 out;
 
     puts("acquire via WaitSynchN, N=3, wait_all=true");
-    svcWaitSynchronizationN(&out, semas, 3, true, U64_MAX);
+    result = svcWaitSynchronizationN(&out, semas, 3, true, ONE_SEC);
+    if (result == TIMEOUT) puts("Timeout!");
     printf("available_count=%ld\n", GetSemaCount(sema));
 
     puts("acquire via WaitSynchN, N=3, wait_all=false");
-    svcWaitSynchronizationN(&out, semas, 3, false, U64_MAX);
+    result = svcWaitSynchronizationN(&out, semas, 3, false, ONE_SEC);
+    if (result == TIMEOUT) puts("Timeout!");
     printf("available_count=%ld\n", GetSemaCount(sema));
+
+    puts("acquire via WaitSynchN, N=3, wait_all=true");
+    result = svcWaitSynchronizationN(&out, semas, 3, true, ONE_SEC);
+    if (result == TIMEOUT) puts("Timeout!");
+    printf("available_count=%ld\n", GetSemaCount(sema));
+
 
 
     printf("Press A to exit\n");
