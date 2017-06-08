@@ -1,0 +1,100 @@
+; Example PICA200 vertex shader
+
+; Uniforms
+.fvec projection[4], modelView[4]
+
+; Constants
+.constf myconst(0.0, 1.0, 4.0, 0.5)
+.alias  zeros myconst.xxxx ; Vector full of zeros
+.alias  ones  myconst.yyyy ; Vector full of ones
+.alias  half  myconst.wwww
+
+; Outputs
+.out outpos position
+.out outtc0 texcoord0
+.out outclr color
+.out outview view
+.out outnq normalquat
+
+; Inputs (defined as aliases for convenience)
+.alias inpos v0
+.alias intex v1
+.alias innrm v2
+.alias intan v3
+
+.proc main
+	; Force the w component of inpos to be 1.0
+	mov r0.xyz, inpos
+	mov r0.w,   ones
+
+	; r1 = modelView * inpos
+	dp4 r1.x, modelView[0], r0
+	dp4 r1.y, modelView[1], r0
+	dp4 r1.z, modelView[2], r0
+	dp4 r1.w, modelView[3], r0
+
+	; outview = -r1
+	mov outview, -r1
+
+	; outpos = projection * r1
+	dp4 outpos.x, projection[0], r1
+	dp4 outpos.y, projection[1], r1
+	dp4 outpos.z, projection[2], r1
+	dp4 outpos.w, projection[3], r1
+
+	; outtex = intex
+	mov outtc0, intex
+
+	; Transform the normal vector with the modelView matrix
+	; TODO: use a separate normal matrix that is the transpose of the inverse of modelView
+	dp3 r14.x, modelView[0], innrm
+	dp3 r14.y, modelView[1], innrm
+	dp3 r14.z, modelView[2], innrm
+	dp3 r6.x, r14, r14
+	rsq r6.x, r6.x
+	mul r14.xyz, r14.xyz, r6.x
+	
+	; And tangent vector
+	dp3 r13.x, modelView[0], intan
+	dp3 r13.y, modelView[1], intan
+	dp3 r13.z, modelView[2], intan
+	dp3 r6.x, r13, r13
+	rsq r6.x, r6.x
+	mul r13.xyz, r13.xyz, r6.x
+	
+	mul r12.xyz, r14.yzx, r13.zxy
+	mad r12.xyz, -r13.zxy, r14.yzx, r12.xyz
+	
+	; Generate quaternion
+	; T=r13
+	; B=r12
+	; N=r14
+	
+	mov r11.x, r13.x
+	mov r11.y, r12.y
+	mov r11.z, r14.z
+	mov r11.w, ones.w
+	mov r10, ones
+	dp4 r11, r11, r10  ; 1+Tx+By+Nz
+	rsq r11.xyz, r11.x  ; r11.xyz=1/sqrt(1+Tx+By+Nz)
+	rcp r11.w, r11.x    ; r11.w=sqrt(1+Tx+By+Nz)
+	mov r10, half
+	mul r11, r11, r10  ; r11.xyz,w = 0.5/sqrt(1+Tx+By+Nz), 0.5*sqrt(1+Tx+By+Nz)
+	
+	mov r9.x, r12.z
+	mov r9.y, r14.x
+	mov r9.z, r13.y
+	mov r8.x, r14.y
+	mov r8.y, r13.z
+	mov r8.z, r12.x
+	
+	add r9.xyz, r9.xyz, -r8.xyz
+	mul r11.xyz, r11.xyz, r9.xyz
+	mov outnq, r11
+	
+	
+	mov outclr, ones
+
+	; We're finished
+	end
+.end
